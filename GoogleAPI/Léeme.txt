@@ -1,0 +1,2 @@
+Esta es la carpeta para las imágenes obtenidas mediante la API de Google.
+Por favor, no la borres.
