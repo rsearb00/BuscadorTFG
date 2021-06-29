@@ -26,6 +26,9 @@ key = 'AIzaSyCwyYnQEC6bmXq5DuTiPPIBQ0RTVOi363c'
 # ID del Buscador o CX:
 idBuscador = 'd9e4271b079afcc62'
 
+# -------Búsqueda con la API de Instagram
+import instaloader
+
 
 # --------------------------------Creación de la Interfaz-----------------------------------
 raiz = Tk()
@@ -47,6 +50,10 @@ def infoAPIGoogle():
     messagebox.showinfo(
         message='Esta búsqueda funciona mediante la API de Google.\nInternamente esta aplicación guarda un buscador propio con su clave para poder buscar en Google.\nNo muestra gráficamente los resultados.\nAlmacena las fotos en la carpeta "GoogleAPI"', title='API de Google')
 
+def infoAPIInstagram():
+    messagebox.showinfo(
+        message='Esta búsqueda funciona mediante la API de Instagram.\nBusca todas las imágenes pertenecientes al hashtag escogido.\nNo para en función del número introducido', title='API de Instagram (beta)')
+
 def infoOpcionesGenerales():
     messagebox.showinfo(
         message='"Introduce lo que quieras buscar:" aquí tenemos que poner el parámetro de búsqueda que va a determinar los resultados.\n\n"Introduce el número de imágenes a descargar:" en este caso, lo que seleccionamos es cuantas imágenes vamos a descargar.', title='Opciones generales')
@@ -63,6 +70,7 @@ raiz.config(menu=barraMenu)
 ayudaMenu=Menu(barraMenu, tearoff=0)
 ayudaMenu.add_command(label="Google Driver", command=infoGoogleDriver)
 ayudaMenu.add_command(label="API de Google", command=infoAPIGoogle)
+ayudaMenu.add_command(label="API de Instagram", command=infoAPIInstagram)
 ayudaMenu.add_command(label="Opciones generales", command=infoOpcionesGenerales)
 ayudaMenu.add_separator()
 ayudaMenu.add_command(label="Acerca de...", command=infoAcercaDe)
@@ -74,7 +82,7 @@ seleccionBuscadorLabel = Label(
     raiz, text="Por favor, selecciona un buscador entre los disponibles:")
 seleccionBuscadorLabel.pack()
 
-opcionesBusqueda = ['Google Driver', 'API de Google']
+opcionesBusqueda = ['Google Driver', 'API de Google', 'API de Instagram (beta)']
 comboBox = Combobox(raiz, width=50, values=opcionesBusqueda, state='readonly')
 comboBox.current(0)
 comboBox.pack()
@@ -129,8 +137,7 @@ def googleDriver(busqueda, num_busquedas):
         try:
             driver.find_element_by_xpath(
                 '//*[@id="islmp"]/div/div/div/div/div[3]/div[2]/input').click()
-                # '//*[@id="islmp"]/div/div/div/div/div[4]/div[2]/input
-            # '//*[@id="islmp"]/div/div/div/div/div[5]/input'
+            
             time.sleep(2)
         except:
             pass
@@ -213,39 +220,60 @@ def googleAPI(busqueda, num_busquedas):
     messagebox.showinfo(
         message='La búsqueda ha concluido, puedes buscar de nuevo', title='Búsqueda finalizada con éxito')
 
+# --------3 Búsqueda con la API de Instagram (Busca imágenes donde exista el hashtag introducido
+# )
+
+def instagramAPI(busqueda, num_busquedas):
+
+    L = instaloader.Instaloader()
+
+    # Obtiene todos los posts en función del hashtag introducido
+    for post in instaloader.Hashtag.from_name(L.context, busqueda).get_posts():
+        # Usamos post para obtener el objeto con el post completo
+        L.download_post(post, target='#'+busqueda)
+
+    messagebox.showinfo(
+        message='La búsqueda ha concluido, puedes buscar de nuevo', title='Búsqueda finalizada con éxito')
+
 
 # -------------------------Botón de búsqueda----------------------------------------------
 
 
 def buscar(busq, numB):
     if busq != "" and numB > 0:
-        #print(f"Opción del buscador: {comboBox.get()}")
+        
         # OJO: Current obtiene el índice del elemento y get() el valor
         if comboBox.get() == 'Google Driver':
             # Ventana de éxito que muestra que la búsqueda está en curso
             messagebox.showinfo(
                 message=f'Has decidido buscar {busq} {numB} veces, usando Google Driver.\nPor favor, espera a que acabe para buscar de nuevo', title='Búsqueda en curso')
-            #print(f"Has decidido buscar: {busq} el siguiente número de veces: {numB} usando Google Driver")
+            
             googleDriver(busq, numB)
+
+        elif comboBox.get() == 'API de Instagram':
+            # Ventana de éxito que muestra que la búsqueda está en curso
+            messagebox.showinfo(
+                message=f'Has decidido buscar {busq} {numB} veces, usando la API de Instagram.\nPor favor, espera a que acabe para buscar de nuevo', title='Búsqueda en curso')
+            
+            instagramAPI(busq, numB)
 
         else:
             # Ventana de éxito que muestra que la búsqueda está en curso
             messagebox.showinfo(
                 message=f'Has decidido buscar {busq} {numB} veces, usando la API de Google.\nPor favor, espera a que acabe para buscar de nuevo.', title='Búsqueda en curso')
-            #print(f"Has decidido buscar: {busq} el siguiente número de veces: {numB} usando la API de Google")
+           
             googleAPI(busq, numB)
 
     else:
         # Ventana de fallo que indica que no se puede producir la búsqueda al no existir
         messagebox.showerror(
             message='Por favor, introduce los valores que faltan', title='No se puede hacer la búsqueda')
-        #print("No ha seleccionado opciones correctas")
+       
 
 
 # Si no ponemos lambda, el botón llama directamente a la función, sin esperar
 botonBusqueda = Button(raiz, text="Realizar búsqueda",
                        command=lambda: buscar(busquedaTk.get(), numBusquedas.get()))
-#botonBusqueda.grid(row=0, column=2, sticky="e", padx=10, pady=10)
 botonBusqueda.pack()
 
 # Al final del todo, para mantener la ventana de búsqueda abierta
